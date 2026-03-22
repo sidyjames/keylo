@@ -95,14 +95,17 @@ export default function Header({ isMobile = false, onToggleSidebar = () => {} })
 
         <button style={{
           background: ORANGE, color: "white", border: "none",
-          padding: isMobile ? "8px 12px" : "10px 20px", borderRadius: 10, cursor: "pointer",
+          padding: isMobile ? "8px" : "10px 20px", borderRadius: 10, cursor: "pointer",
           fontSize: 14, fontWeight: 600,
           display: "flex", alignItems: "center", gap: 6,
           boxShadow: "0 2px 8px rgba(249,115,22,0.30)",
           transition: "background 0.15s",
+          width: isMobile ? 42 : "auto",
+          height: isMobile ? 42 : "auto",
+          justifyContent: "center",
         }}>
           <span style={{ fontSize: 17 }}>+</span>
-          Ajouter un bien
+          {!isMobile && "Ajouter un bien"}
         </button>
 
       </div>
