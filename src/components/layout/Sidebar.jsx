@@ -11,6 +11,7 @@ import {
   Settings,         // Paramètres
   ChevronLeft,      // Bouton collapse
   ChevronRight,     // Bouton expand
+  LogOut,           // Déconnexion
 } from "lucide-react";
 
 // Couleurs principales de Keylo
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
 
 export default function Sidebar({ isMobile = false, open = true, onClose = () => {} }) {
   const [collapsed, setCollapsed] = useState(false);
+  const [logoutHover, setLogoutHover] = useState(false);
 
   const effectiveCollapsed = isMobile ? false : collapsed;
 
@@ -197,14 +199,40 @@ export default function Sidebar({ isMobile = false, open = true, onClose = () =>
             color: "white", fontWeight: 700, fontSize: 13, flexShrink: 0,
           }}>JD</div>
 
-          {/* Nom + rôle */}
-          <div style={{ minWidth: 0 }}>
+          {/* Nom + rôle + bouton déconnexion */}
+          <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{
               fontSize: 13, fontWeight: 600, color: "#111827",
               whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"
             }}>Jean Dupont</div>
             <div style={{ fontSize: 11, color: "#9ca3af" }}>Propriétaire</div>
           </div>
+
+          {/* Bouton déconnexion */}
+          <button
+            onClick={() => {
+              // TODO: Implémenter la logique de déconnexion
+              console.log("Déconnexion");
+            }}
+            onMouseEnter={() => setLogoutHover(true)}
+            onMouseLeave={() => setLogoutHover(false)}
+            style={{
+              background: logoutHover ? "#fee2e2" : "transparent",
+              border: "none",
+              cursor: "pointer",
+              color: "#ef4444",
+              padding: "6px",
+              borderRadius: 6,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              transition: "background 0.15s",
+            }}
+            title="Déconnexion"
+          >
+            <LogOut size={18} strokeWidth={1.8} />
+          </button>
         </div>
       )}
 
