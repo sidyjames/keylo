@@ -26,30 +26,81 @@ const NAV_ITEMS = [
   { label: "Paramètres",      icon: Settings,        path: "/parametres" },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isMobile = false, open = true, onClose = () => {} }) {
   const [collapsed, setCollapsed] = useState(false);
 
+  const effectiveCollapsed = isMobile ? false : collapsed;
+
+  const baseStyle = {
+    width: effectiveCollapsed ? 68 : 260,
+    minWidth: effectiveCollapsed ? 68 : 260,
+    background: "white",
+    borderRight: isMobile ? "none" : "1px solid #f0ece6",
+    display: "flex",
+    flexDirection: "column",
+    transition:
+      isMobile
+        ? "transform 0.22s cubic-bezier(.4,0,.2,1)"
+        : "width 0.22s cubic-bezier(.4,0,.2,1), min-width 0.22s",
+    overflow: "hidden",
+    zIndex: 20,
+  };
+
+  const mobileStyle = isMobile
+    ? {
+        position: "fixed",
+        top: 0,
+        left: 0,
+        height: "100vh",
+        transform: open ? "translateX(0)" : "translateX(-100%)",
+        boxShadow: open ? "2px 0 12px rgba(0,0,0,0.16)" : "none",
+      }
+    : {};
+
   return (
-    <aside style={{
-      width: collapsed ? 68 : 260,
-      minWidth: collapsed ? 68 : 260,
-      background: "white",
-      borderRight: "1px solid #f0ece6",
-      display: "flex",
-      flexDirection: "column",
-      transition: "width 0.22s cubic-bezier(.4,0,.2,1), min-width 0.22s",
-      overflow: "hidden",
-      zIndex: 10,
-    }}>
+    <>
+      {isMobile && open && (
+        <div
+          onClick={onClose}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.35)",
+            zIndex: 15,
+          }}
+        />
+      )}
+
+      <aside style={{ ...baseStyle, ...mobileStyle }}>
 
       {/* ── Logo Keylo ── */}
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: collapsed ? "center" : "space-between",
-        padding: collapsed ? "12px 0" : "12px 16px",
-        borderBottom: "1px solid #f5f0ea",
-      }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: effectiveCollapsed ? "center" : "space-between",
+          padding: effectiveCollapsed ? "12px 0" : "12px 16px",
+          borderBottom: "1px solid #f5f0ea",
+        }}
+      >
+        {isMobile && (
+          <button
+            onClick={onClose}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "#6b7280",
+              padding: 4,
+              borderRadius: 6,
+              display: "flex",
+              alignItems: "center",
+              marginRight: 8,
+            }}
+          >
+            ✕
+          </button>
+        )}
         <img
           src="/logo keylo.png"
           alt="Keylo logo"
@@ -61,8 +112,8 @@ export default function Sidebar() {
           }}
         />
 
-        {/* Bouton fermer sidebar */}
-        {!collapsed && (
+        {/* Bouton fermer sidebar (desktop seulement pour éviter bug mobile) */}
+        {!isMobile && !collapsed && (
           <button
             onClick={() => setCollapsed(true)}
             style={{
@@ -76,8 +127,8 @@ export default function Sidebar() {
         )}
       </div>
 
-      {/* Bouton ouvrir sidebar */}
-      {collapsed && (
+      {/* Bouton ouvrir sidebar (desktop seulement) */}
+      {!isMobile && collapsed && (
         <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 0" }}>
           <button
             onClick={() => setCollapsed(false)}
@@ -101,12 +152,15 @@ export default function Sidebar() {
             <NavLink
               key={item.path}
               to={item.path}
+              onClick={() => {
+                if (isMobile) onClose();
+              }}
               style={({ isActive }) => ({
                 display: "flex",
                 alignItems: "center",
                 gap: 10,
-                padding: collapsed ? "11px 0" : "10px 12px",
-                justifyContent: collapsed ? "center" : "flex-start",
+                padding: effectiveCollapsed ? "11px 0" : "10px 12px",
+                justifyContent: effectiveCollapsed ? "center" : "flex-start",
                 borderRadius: 10,
                 cursor: "pointer",
                 marginBottom: 2,
@@ -154,6 +208,7 @@ export default function Sidebar() {
         </div>
       )}
 
-    </aside>
+      </aside>
+    </>
   );
 }

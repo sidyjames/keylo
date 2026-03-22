@@ -2,28 +2,57 @@
 // Contient la Sidebar (gauche) + Header (haut) + contenu principal
 
 import { Outlet } from "react-router-dom";
+import { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 
 export default function Layout() {
+  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth < 768 : false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const onResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) setMobileSidebarOpen(false);
+    };
+
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const toggleSidebar = () => setMobileSidebarOpen((prev) => !prev);
+  const closeSidebar = () => setMobileSidebarOpen(false);
+
   return (
-    // Conteneur principal en flex horizontal
-    <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: isMobile ? "column" : "row",
+        height: "100vh",
+        overflow: "hidden",
+        position: "relative",
+      }}
+    >
+      <Sidebar
+        isMobile={isMobile}
+        open={!isMobile || mobileSidebarOpen}
+        onClose={closeSidebar}
+      />
 
-      {/* Sidebar fixe à gauche */}
-      <Sidebar />
-
-      {/* Zone droite : Header + contenu de la page */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <Header isMobile={isMobile} onToggleSidebar={toggleSidebar} />
 
-        {/* Header fixe en haut */}
-        <Header />
-
-        {/* Outlet = la page active s'affiche ici (Dashboard, Biens, etc.) */}
-        <main style={{ flex: 1, overflow: "auto", padding: "28px", background: "#faf9f7" }}>
+        <main
+          style={{
+            flex: 1,
+            overflow: "auto",
+            padding: isMobile ? "14px" : "28px",
+            background: "#faf9f7",
+          }}
+        >
           <Outlet />
         </main>
-
       </div>
     </div>
   );

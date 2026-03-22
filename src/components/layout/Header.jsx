@@ -1,7 +1,7 @@
 // Header.jsx — Barre supérieure de Keylo
 // Affiche le titre de la page active et les actions globales
 
-import { Bell } from "lucide-react"; // icône de notification
+import { Bell, Menu } from "lucide-react"; // icônes
 import { useLocation } from "react-router-dom";
 
 const ORANGE = "#f97316";
@@ -15,33 +15,62 @@ const PAGE_INFO = {
   "/parametres": { title: "Paramètres",       desc: "Gérez votre compte et abonnement" },
 };
 
-export default function Header() {
+export default function Header({ isMobile = false, onToggleSidebar = () => {} }) {
   const location = useLocation();
   const page = PAGE_INFO[location.pathname] || { title: "Keylo", desc: "" };
 
   return (
-    <header style={{
-      background: "white",
-      borderBottom: "1px solid #f0ece6",
-      padding: "0 28px",
-      height: 64,
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-      flexShrink: 0,
-      position: "sticky", top: 0, zIndex: 5,
-    }}>
+    <header
+      style={{
+        background: "white",
+        borderBottom: "1px solid #f0ece6",
+        padding: isMobile ? "0 12px" : "0 28px",
+        height: 64,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        flexShrink: 0,
+        position: "sticky",
+        top: 0,
+        zIndex: 5,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        {isMobile && (
+          <button
+            onClick={onToggleSidebar}
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: 10,
+              border: "1px solid #f0ece6",
+              background: "white",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: 8,
+            }}
+            aria-label="Ouvrir le menu"
+          >
+            <Menu size={20} color={ORANGE} />
+          </button>
+        )}
 
-      {/* Titre + description de la page */}
-      <div>
-        <h1 style={{
-          fontSize: 20, fontWeight: 800,
-          color: "#111827", margin: 0, letterSpacing: "-0.4px"
-        }}>{page.title}</h1>
-        <p style={{ fontSize: 12, color: "#9ca3af", margin: 0, marginTop: 1 }}>
-          {page.desc}
-        </p>
+        <div>
+          <h1 style={{
+            fontSize: isMobile ? 18 : 20,
+            fontWeight: 800,
+            color: "#111827",
+            margin: 0,
+            letterSpacing: "-0.4px"
+          }}>{page.title}</h1>
+          <p style={{ fontSize: 12, color: "#9ca3af", margin: 0, marginTop: 1 }}>
+            {page.desc}
+          </p>
+        </div>
       </div>
 
-      {/* Actions à droite */}
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
 
         {/* Cloche de notifications */}
@@ -51,11 +80,9 @@ export default function Header() {
             background: "#faf9f7", border: "1px solid #f0ece6",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
-            {/* Icône Bell de Lucide React */}
             <Bell size={20} color={ORANGE} strokeWidth={1.8} />
           </div>
 
-          {/* Badge nombre de notifications */}
           <div style={{
             position: "absolute", top: -4, right: -4,
             width: 18, height: 18, borderRadius: "50%",
@@ -66,10 +93,9 @@ export default function Header() {
           }}>3</div>
         </div>
 
-        {/* Bouton ajouter un bien */}
         <button style={{
           background: ORANGE, color: "white", border: "none",
-          padding: "10px 20px", borderRadius: 10, cursor: "pointer",
+          padding: isMobile ? "8px 12px" : "10px 20px", borderRadius: 10, cursor: "pointer",
           fontSize: 14, fontWeight: 600,
           display: "flex", alignItems: "center", gap: 6,
           boxShadow: "0 2px 8px rgba(249,115,22,0.30)",
