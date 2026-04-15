@@ -36,27 +36,6 @@ export default function Header({ isMobile = false, onToggleSidebar = () => {} })
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        {isMobile && (
-          <button
-            onClick={onToggleSidebar}
-            style={{
-              width: 42,
-              height: 42,
-              borderRadius: 10,
-              border: "1px solid #f0ece6",
-              background: "white",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 8,
-            }}
-            aria-label="Ouvrir le menu"
-          >
-            <Menu size={20} color={ORANGE} />
-          </button>
-        )}
-
         <div>
           <h1 style={{
             fontSize: isMobile ? 18 : 20,
@@ -72,8 +51,6 @@ export default function Header({ isMobile = false, onToggleSidebar = () => {} })
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-
-        {/* Cloche de notifications */}
         <div style={{ position: "relative", cursor: "pointer" }}>
           <div style={{
             width: 38, height: 38, borderRadius: 10,
@@ -108,6 +85,25 @@ export default function Header({ isMobile = false, onToggleSidebar = () => {} })
           {!isMobile && "Ajouter un bien"}
         </button>
 
+        {isMobile && (
+          <button
+            onClick={onToggleSidebar}
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: 10,
+              border: "1px solid #f0ece6",
+              background: "white",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            aria-label="Ouvrir le menu"
+          >
+            <Menu size={20} color={ORANGE} />
+          </button>
+        )}
       </div>
     </header>
   );

@@ -176,7 +176,7 @@ export default function Sidebar({ isMobile = false, open = true, onClose = () =>
             >
               {/* Icône Lucide avec taille fixe */}
               <Icon size={18} strokeWidth={1.8} style={{ flexShrink: 0 }} />
-              {!collapsed && (
+              {!effectiveCollapsed && (
                 <span style={{ whiteSpace: "nowrap" }}>{item.label}</span>
               )}
             </NavLink>
