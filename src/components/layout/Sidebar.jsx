@@ -88,6 +88,7 @@ export default function Sidebar({ isMobile = false, open = true, onClose = () =>
         {isMobile && (
           <button
             onClick={onClose}
+            aria-label="Fermer le menu"
             style={{
               background: "none",
               border: "none",
@@ -118,6 +119,7 @@ export default function Sidebar({ isMobile = false, open = true, onClose = () =>
         {!isMobile && !collapsed && (
           <button
             onClick={() => setCollapsed(true)}
+            aria-label="Réduire le menu"
             style={{
               background: "none", border: "none", cursor: "pointer",
               color: "#d1cdc8", padding: 4, borderRadius: 6,
@@ -134,6 +136,7 @@ export default function Sidebar({ isMobile = false, open = true, onClose = () =>
         <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 0" }}>
           <button
             onClick={() => setCollapsed(false)}
+            aria-label="Agrandir le menu"
             style={{
               background: "none", border: "none", cursor: "pointer",
               color: "#d1cdc8", padding: 4, borderRadius: 6,
@@ -214,6 +217,7 @@ export default function Sidebar({ isMobile = false, open = true, onClose = () =>
               // TODO: Implémenter la logique de déconnexion
               console.log("Déconnexion");
             }}
+            aria-label="Déconnexion"
             onMouseEnter={() => setLogoutHover(true)}
             onMouseLeave={() => setLogoutHover(false)}
             style={{

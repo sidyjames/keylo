@@ -14,10 +14,10 @@ function renderDashboard() {
 }
 
 describe('Dashboard', () => {
-  it('affiche les cartes KPI principales', () => {
+  it('affiche les cartes KPI principales', () => { 
     renderDashboard();
 
-    expect(screen.getByText('Revenu mensuel')).toBeInTheDocument();
+    expect(screen.getByText('Revenu mensuel')).toBeInTheDocument(); // Vérifie que la carte "Revenu mensuel" est affichée
     expect(screen.getByText('12 345 €')).toBeInTheDocument();
     expect(screen.getByText('Loyers en attente')).toBeInTheDocument();
     expect(screen.getByText('Loyers en retard')).toBeInTheDocument();

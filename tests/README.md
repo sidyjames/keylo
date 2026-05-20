@@ -6,6 +6,7 @@ Ce dossier regroupe les tests du projet Keylo.
 
 - `setup.js` : configuration globale lancée avant les tests.
 - `Dashboard.test.jsx` : tests de la page Dashboard.
+- `Sidebar.test.jsx` : tests du menu de navigation.
 
 ## Commandes utiles
 
@@ -50,6 +51,30 @@ it('explique ce que le test vérifie', () => {
 - les paiements temporaires sont affichés ;
 - les statuts sont corrects ;
 - le lien "Voir tous les paiements" mène vers `/paiements`.
+
+## Tests du menu
+
+`Sidebar.test.jsx` vérifie que :
+
+- le logo et le profil utilisateur s'affichent ;
+- tous les liens du menu sont présents ;
+- chaque lien pointe vers la bonne route ;
+- le lien actif est bien mis en évidence ;
+- le menu peut être réduit et agrandi sur desktop ;
+- le menu mobile appelle `onClose` quand on le ferme ;
+- le menu mobile appelle `onClose` quand on clique sur un lien.
+
+## Pourquoi userEvent ?
+
+`userEvent` permet de simuler des actions utilisateur :
+
+```jsx
+const user = userEvent.setup();
+
+await user.click(screen.getByRole('button', { name: /réduire le menu/i }));
+```
+
+On l'utilise pour tester les clics sur les boutons du menu.
 
 ## Pourquoi MemoryRouter ?
 
