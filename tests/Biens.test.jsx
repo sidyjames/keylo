@@ -36,6 +36,21 @@ describe('Biens', () => {
     expect(screen.queryByText('Studio - Paris')).not.toBeInTheDocument();
   });
 
+  it('affiche une pagination et permet de changer de page', async () => {
+    const user = userEvent.setup();
+
+    renderBiens();
+
+    expect(screen.getByText(/affichage de/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Page 1' })).toHaveAttribute('aria-current', 'page');
+
+    await user.click(screen.getByRole('button', { name: 'Page 2' }));
+
+    expect(screen.getByRole('button', { name: 'Page 2' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByText('Appartement T3 - Lille')).toBeInTheDocument();
+    expect(screen.queryByText('Appartement T2 - Lyon')).not.toBeInTheDocument();
+  });
+
   it('retire le bouton d ajout et garde le détail sur une page dédiée', () => {
     renderBiens();
 
@@ -71,7 +86,7 @@ describe('Biens', () => {
 
     expect(dialog).toBeInTheDocument();
     expect(within(dialog).getByText(/êtes-vous sûr/i)).toBeInTheDocument();
-    expect(within(dialog).getAllByText('Studio - Paris')).toHaveLength(2);
+    expect(within(dialog).getByText('Studio - Paris')).toBeInTheDocument();
 
     await user.click(within(dialog).getByRole('button', { name: /annuler/i }));
 

@@ -12,6 +12,10 @@ import {
 } from "lucide-react";
 import { properties, statusStyles } from "../data/properties";
 
+// Nombre de biens affichés par page.
+// Si la liste devient plus grande que cette valeur, la pagination apparaît automatiquement.
+const ITEMS_PER_PAGE = 3;
+
 export default function Biens() {
   // Liste des biens affichés dans la page.
   // On part des données temporaires de properties.js, puis on peut retirer un bien de cette liste localement.
@@ -23,6 +27,10 @@ export default function Biens() {
   // Bien sélectionné pour suppression.
   // null signifie qu'aucun modal de confirmation n'est ouvert.
   const [propertyToDelete, setPropertyToDelete] = useState(null);
+
+  // Page actuellement affichée dans le tableau.
+  // La première page vaut 1 pour rester simple à lire côté interface.
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Données des cartes de synthèse affichées en haut de la page.
   // La valeur "Biens actifs" dépend de displayedProperties pour se mettre à jour après une suppression.
@@ -62,6 +70,29 @@ export default function Biens() {
     );
   }, [displayedProperties, query]);
 
+  // Nombre total de pages après filtrage.
+  // Math.max(1, ...) évite d'avoir une page 0 si la recherche ne retourne aucun résultat.
+  const totalPages = Math.max(1, Math.ceil(filteredProperties.length / ITEMS_PER_PAGE));
+
+  // Page réellement utilisée pour l'affichage.
+  // Si on supprime des biens et que la page actuelle n'existe plus, on revient visuellement à la dernière page valide.
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  // Index du premier bien à afficher sur la page actuelle.
+  // Exemple : page 2 avec 3 biens par page commence à l'index 3.
+  const firstPropertyIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
+
+  // Portion de la liste filtrée affichée dans le tableau.
+  // slice coupe le tableau entre le premier index inclus et le dernier index exclu.
+  const paginatedProperties = filteredProperties.slice(
+    firstPropertyIndex,
+    firstPropertyIndex + ITEMS_PER_PAGE
+  );
+
+  // Indique si la pagination doit être visible.
+  // On l'affiche seulement quand il y a plus de biens que la limite par page.
+  const shouldShowPagination = filteredProperties.length > ITEMS_PER_PAGE;
+
   // Ouvre le modal en mémorisant le bien concerné.
   // On ne supprime rien à cette étape : on demande d'abord confirmation à l'utilisateur.
   const openDeleteModal = (property) => {
@@ -78,11 +109,19 @@ export default function Biens() {
   // On filtre la liste pour retirer uniquement le bien dont l'id correspond au bien sélectionné.
   const confirmDelete = () => {
     if (!propertyToDelete) return;
-// On met à jour la liste des biens affichés en retirant le bien sélectionné.
+
+    // On met à jour la liste des biens affichés en retirant le bien sélectionné.
     setDisplayedProperties((currentProperties) =>
       currentProperties.filter((property) => property.id !== propertyToDelete.id)
     );
     setPropertyToDelete(null);
+  };
+
+  // Change de page via les boutons numérotés, précédent ou suivant.
+  // La limite empêche de dépasser la première ou la dernière page.
+  const goToPage = (pageNumber) => {
+    const nextPage = Math.min(Math.max(pageNumber, 1), totalPages);
+    setCurrentPage(nextPage);
   };
 
   return (
@@ -121,7 +160,13 @@ export default function Biens() {
             />
             <input
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => {
+                setQuery(event.target.value);
+
+                // Quand la recherche change, on revient à la première page.
+                // Sinon l'utilisateur pourrait rester sur une page vide après un filtre.
+                setCurrentPage(1);
+              }}
               type="search"
               placeholder="Rechercher un bien..."
               className="h-11 w-full rounded-lg border border-stone-200 bg-white pl-11 pr-4 text-sm font-medium text-gray-800 outline-none transition placeholder:text-gray-400 focus:border-orange-300 focus:ring-4 focus:ring-orange-100"
@@ -145,7 +190,7 @@ export default function Biens() {
             </thead>
             <tbody>
               {/* Une ligne par bien filtré. Les actions ouvrent la page dédiée du bien. */}
-              {filteredProperties.map((property) => (
+              {paginatedProperties.map((property) => (
                 <tr
                   key={property.id}
                   className="border-t border-stone-100 bg-white text-sm transition hover:bg-orange-50/40"
@@ -207,6 +252,65 @@ export default function Biens() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination : affichée uniquement quand la liste dépasse ITEMS_PER_PAGE biens. */}
+        {shouldShowPagination && (
+          <div className="flex flex-col gap-3 border-t border-stone-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            {/* Résumé de la plage actuellement affichée. */}
+            <p className="text-sm font-medium text-gray-500">
+              Affichage de{" "}
+              <span className="font-extrabold text-gray-800">{firstPropertyIndex + 1}</span> à{" "}
+              <span className="font-extrabold text-gray-800">
+                {Math.min(firstPropertyIndex + ITEMS_PER_PAGE, filteredProperties.length)}
+              </span>{" "}
+              sur <span className="font-extrabold text-gray-800">{filteredProperties.length}</span>{" "}
+              biens
+            </p>
+
+            {/* Boutons de navigation entre les pages. */}
+            <nav className="flex items-center gap-2" aria-label="Pagination des biens">
+              <button
+                type="button"
+                onClick={() => goToPage(safeCurrentPage - 1)}
+                disabled={safeCurrentPage === 1}
+                className="h-9 rounded-lg border border-stone-200 px-3 text-sm font-bold text-gray-600 transition hover:border-orange-200 hover:text-orange-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-stone-200 disabled:hover:text-gray-600"
+              >
+                Précédent
+              </button>
+
+              {Array.from({ length: totalPages }, (_, index) => {
+                const pageNumber = index + 1;
+                const isActive = pageNumber === safeCurrentPage;
+
+                return (
+                  <button
+                    key={pageNumber}
+                    type="button"
+                    onClick={() => goToPage(pageNumber)}
+                    className={`h-9 w-9 rounded-lg text-sm font-extrabold transition ${
+                      isActive
+                        ? "bg-orange-500 text-white"
+                        : "border border-stone-200 text-gray-600 hover:border-orange-200 hover:text-orange-500"
+                    }`}
+                    aria-current={isActive ? "page" : undefined}
+                    aria-label={`Page ${pageNumber}`}
+                  >
+                    {pageNumber}
+                  </button>
+                );
+              })}
+
+              <button
+                type="button"
+                onClick={() => goToPage(safeCurrentPage + 1)}
+                disabled={safeCurrentPage === totalPages}
+                className="h-9 rounded-lg border border-stone-200 px-3 text-sm font-bold text-gray-600 transition hover:border-orange-200 hover:text-orange-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-stone-200 disabled:hover:text-gray-600"
+              >
+                Suivant
+              </button>
+            </nav>
+          </div>
+        )}
       </section>
 
       {/* Modal de confirmation.
