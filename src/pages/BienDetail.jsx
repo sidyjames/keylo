@@ -10,6 +10,8 @@ import {
   MoreHorizontal,
   Pencil,
   UserRound,
+  X,
+  Save
 } from "lucide-react";
 import { properties, statusStyles } from "../data/properties";
 
