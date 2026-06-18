@@ -9,6 +9,7 @@ import Layout from "./components/layout/Layout";
 // Pages de l'application
 import Dashboard from "./pages/Dashboard";
 import Biens from "./pages/Biens";
+import BienDetail from "./pages/BienDetail";
 import Paiements from "./pages/Paiements";
 import Documents from "./pages/Documents";
 import Parametres from "./pages/Parametres";
@@ -27,6 +28,7 @@ export default function App() {
           {/* Pages principales */}
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="biens" element={<Biens />} />
+          <Route path="biens/:bienId" element={<BienDetail />} />
           <Route path="paiements" element={<Paiements />} />
           <Route path="documents" element={<Documents />} />
           <Route path="parametres" element={<Parametres />} />

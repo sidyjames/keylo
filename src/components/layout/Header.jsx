@@ -17,7 +17,11 @@ const PAGE_INFO = {
 
 export default function Header({ isMobile = false, onToggleSidebar = () => {} }) {
   const location = useLocation();
-  const page = PAGE_INFO[location.pathname] || { title: "Keylo", desc: "" };
+  const page =
+    PAGE_INFO[location.pathname] ||
+    (location.pathname.startsWith("/biens/")
+      ? PAGE_INFO["/biens"]
+      : { title: "Keylo", desc: "" });
 
   return (
     <header
