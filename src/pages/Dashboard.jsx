@@ -42,6 +42,7 @@ const kpiCards = [
 // Chaque objet représente une ligne du tableau.
 const monthlyPayments = [
   {
+    id: 1,
     property: "Appartement T2 - Lyon", // Bien concerné
     tenant: "Marie Martin", // Locataire
     amount: "1 200 €", // Montant du paiement
@@ -49,6 +50,7 @@ const monthlyPayments = [
     dueDate: "05/06/2024", // Date d'échéance
   },
   {
+    id: 2,
     property: "Studio - Paris",
     tenant: "Lucas Bernard",
     amount: "650 €",
@@ -56,6 +58,7 @@ const monthlyPayments = [
     dueDate: "07/06/2024",
   },
   {
+    id: 3,
     property: "Maison - Bordeaux",
     tenant: "Sophie Leroy",
     amount: "1 000 €",
@@ -63,6 +66,7 @@ const monthlyPayments = [
     dueDate: "10/06/2024",
   },
   {
+    id: 4,
     property: "Appartement T3 - Lille",
     tenant: "Thomas Petit",
     amount: "950 €",
@@ -159,13 +163,15 @@ export default function Dashboard() {
                   <td className="py-3 pr-4 text-gray-700">{payment.dueDate}</td>
                   <td className="py-3 text-right">
                     {/* Étape 11 : bouton prévu pour ouvrir le détail du paiement plus tard */}
-                    <button
-                      type="button"
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-300 transition hover:bg-stone-100 hover:text-orange-500"
-                      aria-label={`Voir le paiement de ${payment.tenant}`}
+               
+                    <Link
+                        to={`/biens/${payment.id}`}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-full text-gray-400 transition hover:bg-white hover:text-orange-500"
+                        aria-label={`Voir les détails de ${payment.name}`}
                     >
-                      <ChevronRight size={18} />
-                    </button>
+                        <ChevronRight size={18} />
+                      </Link>
+           
                   </td>
                 </tr>
               ))}
