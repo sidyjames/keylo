@@ -15,8 +15,8 @@ import {
 } from "lucide-react";
 import { properties, statusStyles } from "../data/properties";
 
-
-// Pour l'instant ils servent à montrer l'état actif, le contenu complet reste visible en dessous.
+// Onglets de la fiche bien.
+// Chaque onglet correspond maintenant à un seul bloc de contenu affiché dans la zone principale.
 const tabs = ["Informations", "Locataire", "Paiements", "Documents"];
 
 export default function BienDetail() {
@@ -105,13 +105,16 @@ export default function BienDetail() {
           </div>
         </div>
 
-        {/* Navigation interne du détail. */}
-        <div className="mt-6 flex gap-1 overflow-x-auto border-b border-stone-200">
+        {/* Navigation interne du détail.
+            Le clic sur un onglet change activeTab, puis ActiveTabPanel affiche uniquement le bloc concerné. */}
+        <div className="mt-6 flex gap-1 overflow-x-auto border-b border-stone-200" role="tablist">
           {tabs.map((tab) => (
             <button
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
+              role="tab"
+              aria-selected={activeTab === tab}
               className={`border-b-2 px-3 py-3 text-sm font-bold transition ${
                 activeTab === tab
                   ? "border-orange-500 bg-orange-50 text-orange-500"
@@ -123,15 +126,9 @@ export default function BienDetail() {
           ))}
         </div>
 
-        {/* Cartes de détail : informations du bien, locataire et prochain paiement. */}
-        <div className="mt-5 grid grid-cols-1 gap-4 xl:grid-cols-3">
-          <InfoCard selectedProperty={selectedProperty} />
-          <TenantCard selectedProperty={selectedProperty} />
-          <PaymentCard selectedProperty={selectedProperty} />
-        </div>
-
-        {/* Liste des documents liés au bien sélectionné. */}
-        <DocumentsPanel selectedProperty={selectedProperty} />
+        {/* Zone de contenu coordonnée avec les tabs.
+            Un seul composant est affiché à la fois pour éviter que les onglets soient seulement décoratifs. */}
+        <ActiveTabPanel activeTab={activeTab} selectedProperty={selectedProperty} />
       </section>
 
       {/* Modal d'édition du bien et du locataire.
@@ -143,6 +140,42 @@ export default function BienDetail() {
           onSave={savePropertyChanges}
         />
       )}
+    </div>
+  );
+}
+
+// Panneau actif de la fiche bien.
+// Il centralise la coordination entre les tabs et les blocs pour garder le JSX principal lisible.
+function ActiveTabPanel({ activeTab, selectedProperty }) {
+  if (activeTab === "Locataire") {
+    return (
+      <div className="mt-5 max-w-2xl" role="tabpanel">
+        <TenantCard selectedProperty={selectedProperty} />
+      </div>
+    );
+  }
+
+  if (activeTab === "Paiements") {
+    return (
+      <div className="mt-5 max-w-2xl" role="tabpanel">
+        <PaymentCard selectedProperty={selectedProperty} />
+      </div>
+    );
+  }
+
+  if (activeTab === "Documents") {
+    return (
+      <div className="mt-5" role="tabpanel">
+        <DocumentsPanel selectedProperty={selectedProperty} />
+      </div>
+    );
+  }
+
+  // Onglet par défaut : Informations.
+  // On garde ce retour final pour afficher un contenu cohérent si activeTab contient une valeur inattendue.
+  return (
+    <div className="mt-5 max-w-2xl" role="tabpanel">
+      <InfoCard selectedProperty={selectedProperty} />
     </div>
   );
 }
@@ -208,14 +241,6 @@ function TenantCard({ selectedProperty }) {
         <p className="font-medium text-gray-500">{selectedProperty.tenantPhone}</p>
         <p className="font-medium text-gray-500">Entrée le {selectedProperty.leaseStart}</p>
       </div>
-
-      {/* Action prévue pour ouvrir une future fiche locataire complète. */}
-      <button
-        type="button"
-        className="mt-5 h-10 w-full rounded-lg border border-stone-200 text-sm font-bold text-gray-800 transition hover:border-orange-200 hover:text-orange-500"
-      >
-        Voir le locataire
-      </button>
     </article>
   );
 }
@@ -264,7 +289,7 @@ function PaymentCard({ selectedProperty }) {
 // Il liste les fichiers rattachés au bien et propose une zone pour en ajouter un nouveau.
 function DocumentsPanel({ selectedProperty }) {
   return (
-    <section className="mt-4 rounded-xl border border-stone-200 p-4">
+    <section className="rounded-xl border border-stone-200 p-4">
       <h3 className="text-sm font-extrabold text-gray-950">Documents</h3>
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {/* Cartes des documents existants. */}
