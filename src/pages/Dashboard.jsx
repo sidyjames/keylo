@@ -1,89 +1,66 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, ChevronRight, PiggyBank, Clock3, CalendarDays, Home } from "lucide-react";
+import { statusStyles } from "../data/properties";
 
-// A remplacer après par des APIs.
-// Pour l'instant, les données sont écrites ici pour construire l'interface.
+// Convertit une chaîne comme "1 200 €" en nombre.
+// Cela permet de calculer les KPI avec les données temporaires existantes.
+const parseCurrency = (value) => Number(value.replace(/[^\d]/g, ""));
 
-// Étape 1 : données des cartes KPI en haut du dashboard.
-// Chaque objet représente une carte : titre, valeur, description, icône et couleur.
-const kpiCards = [
-  {
-    label: "Revenu mensuel",
-    value: "12 345 €",
-    detail: "En hausse de 8% par rapport au mois précédent",
-    icon: PiggyBank,
-    bg: "bg-orange-100"
-  },
-  {
-    label: "Loyers en attente",
-    value: "3",
-    detail: "3 paiements en attente de traitement",
-    icon: Clock3,
-    bg: "bg-orange-100"
-  },
-  {
-    label: "Loyers en retard",
-    value: "2",
-    detail: "2 paiements en retard de paiement",
-    icon: CalendarDays,
-    bg:"bg-red-100"
-  },
-  {
-    label: "Biens",
-    value: "5",
-    detail: "Tous vos biens immobiliers",
-    icon: Home,
-    bg: "bg-blue-100"
-  },
-];
+export default function Dashboard({ properties }) {
+  // Le tableau du dashboard est maintenant construit depuis les biens partagés dans App.jsx.
+  // Quand un paiement passe à "Payé" depuis une fiche bien, cette liste se met à jour automatiquement.
+  const monthlyPayments = properties.map((property) => ({
+    id: property.id,
+    property: property.name,
+    tenant: property.tenant,
+    amount: property.rent,
+    status: property.status,
+    dueDate: property.nextPayment,
+  }));
 
-// Étape 2 : données temporaires du tableau "Paiements du mois".
-// A remplacer par les vraies données de la Bdd.
-// Chaque objet représente une ligne du tableau.
-const monthlyPayments = [
-  {
-    id: 1,
-    property: "Appartement T2 - Lyon", // Bien concerné
-    tenant: "Marie Martin", // Locataire
-    amount: "1 200 €", // Montant du paiement
-    status: "En attente", // Statut du paiement
-    dueDate: "05/06/2024", // Date d'échéance
-  },
-  {
-    id: 2,
-    property: "Studio - Paris",
-    tenant: "Lucas Bernard",
-    amount: "650 €",
-    status: "En attente",
-    dueDate: "07/06/2024",
-  },
-  {
-    id: 3,
-    property: "Maison - Bordeaux",
-    tenant: "Sophie Leroy",
-    amount: "1 000 €",
-    status: "En retard",
-    dueDate: "10/06/2024",
-  },
-  {
-    id: 4,
-    property: "Appartement T3 - Lille",
-    tenant: "Thomas Petit",
-    amount: "950 €",
-    status: "Payé",
-    dueDate: "01/06/2024",
-  },
-];
+  // KPI recalculés depuis les biens pour éviter les chiffres figés.
+  // La source est la même que le tableau, donc les cartes restent cohérentes après une action.
+  const waitingPaymentsCount = properties.filter(
+    (property) => property.status === "En attente"
+  ).length;
+  const latePaymentsCount = properties.filter((property) => property.status === "En retard").length;
+  const monthlyRevenue = properties
+    .filter((property) => property.status === "Payé")
+    .reduce((total, property) => total + parseCurrency(property.rent), 0);
 
-// Étape 3 : couleurs des badges selon le statut.
-// Exemple : si status vaut "En retard", le badge devient rouge.
-const paymentStatusStyles = {
-  "En attente": "bg-orange-100 text-orange-600",
-  "En retard": "bg-red-100 text-red-600",
-  "Payé": "bg-green-100 text-green-600",
-};
+  // Données des cartes KPI en haut du dashboard.
+  // Chaque objet représente une carte : titre, valeur, description, icône et couleur.
+  const kpiCards = [
+    {
+      label: "Revenu mensuel",
+      value: `${monthlyRevenue.toLocaleString("fr-FR")} €`,
+      detail: "Total des loyers marqués comme payés",
+      icon: PiggyBank,
+      bg: "bg-orange-100",
+    },
+    {
+      label: "Loyers en attente",
+      value: String(waitingPaymentsCount),
+      detail: `${waitingPaymentsCount} paiement(s) en attente de traitement`,
+      icon: Clock3,
+      bg: "bg-orange-100",
+    },
+    {
+      label: "Loyers en retard",
+      value: String(latePaymentsCount),
+      detail: `${latePaymentsCount} paiement(s) en retard de paiement`,
+      icon: CalendarDays,
+      bg: "bg-red-100",
+    },
+    {
+      label: "Biens",
+      value: String(properties.length),
+      detail: "Tous vos biens immobiliers",
+      icon: Home,
+      bg: "bg-blue-100",
+    },
+  ];
 
-export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Étape 4 : afficher les cartes KPI du dashboard */}
@@ -140,10 +117,10 @@ export default function Dashboard() {
             </thead>
 
             <tbody>
-              {/* Étape 8 : parcourir les paiements et créer une ligne par paiement */}
+              {/* Étape 8 : parcourir les paiements issus des biens et créer une ligne par paiement */}
               {monthlyPayments.map((payment) => (
                 <tr
-                  key={`${payment.property}-${payment.tenant}`}
+                  key={payment.id}
                   className="text-sm font-semibold text-gray-800"
                 >
                   {/* Étape 9 : remplir chaque cellule avec les données du paiement */}
@@ -154,7 +131,7 @@ export default function Dashboard() {
                     {/* Étape 10 : appliquer automatiquement la bonne couleur au statut */}
                     <span
                       className={`inline-flex rounded-md px-2.5 py-1 text-xs font-bold ${
-                        paymentStatusStyles[payment.status]
+                        statusStyles[payment.status]
                       }`}
                     >
                       {payment.status}
@@ -167,7 +144,7 @@ export default function Dashboard() {
                     <Link
                         to={`/biens/${payment.id}`}
                         className="inline-flex h-9 w-9 items-center justify-center rounded-full text-gray-400 transition hover:bg-white hover:text-orange-500"
-                        aria-label={`Voir les détails de ${payment.name}`}
+                        aria-label={`Voir les détails de ${payment.property}`}
                     >
                         <ChevronRight size={18} />
                       </Link>

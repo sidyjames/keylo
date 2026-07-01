@@ -7,19 +7,18 @@ import {
   FilePlus2,
   FileText,
   Home,
-  MoreHorizontal,
   Pencil,
   UserRound,
   X,
   Save
 } from "lucide-react";
-import { properties, statusStyles } from "../data/properties";
+import { statusStyles } from "../data/properties";
 
 // Onglets de la fiche bien.
 // Chaque onglet correspond maintenant à un seul bloc de contenu affiché dans la zone principale.
 const tabs = ["Informations", "Locataire", "Paiements", "Documents"];
 
-export default function BienDetail() {
+export default function BienDetail({ properties, onUpdateProperty, onMarkPropertyAsPaid }) {
   // Récupère l'id du bien depuis l'URL /biens/:bienId.
   const { bienId } = useParams();
 
@@ -27,20 +26,12 @@ export default function BienDetail() {
   const [activeTab, setActiveTab] = useState("Informations");
 
   // Cherche le bien correspondant à l'id de l'URL.
-  const baseProperty = properties.find((property) => property.id === Number(bienId));
-
-  // Version modifiée localement depuis le modal.
-  // null signifie que la fiche affiche encore le bien original de properties.js.
-  const [editedProperty, setEditedProperty] = useState(null);
+  // La liste vient de App.jsx, ce qui permet de partager les mises à jour avec le dashboard.
+  const selectedProperty = properties.find((property) => property.id === Number(bienId));
 
   // Contrôle l'ouverture du modal d'édition.
   // false = modal fermé, true = formulaire visible par-dessus la page.
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
-  // Bien réellement affiché.
-  // Si l'id de l'URL change, on ignore automatiquement une ancienne modification locale d'un autre bien.
-  const selectedProperty =
-    editedProperty?.id === baseProperty?.id ? editedProperty : baseProperty;
 
   // Ouvre le modal de modification avec les informations actuelles du bien.
   const openEditModal = () => {
@@ -53,14 +44,20 @@ export default function BienDetail() {
   };
 
   // Applique les champs modifiés depuis le modal.
-  // Pour l'instant, la sauvegarde reste locale à la page car le projet utilise des données temporaires.
+  // La sauvegarde remonte à App.jsx pour que le dashboard et la liste des biens récupèrent les nouvelles valeurs.
   const savePropertyChanges = (updatedProperty) => {
-    setEditedProperty(updatedProperty);
+    onUpdateProperty(updatedProperty);
     setIsEditModalOpen(false);
   };
 
+  // Passe le paiement du bien en "Payé".
+  // Cette action met à jour le state partagé, donc le badge de cette fiche et le dashboard changent ensemble.
+  const markAsPaid = () => {
+    onMarkPropertyAsPaid(selectedProperty.id);
+  };
+
   // Si l'id ne correspond à aucun bien, on revient vers la liste.
-  if (!baseProperty || !selectedProperty) {
+  if (!selectedProperty) {
     return <Navigate to="/biens" replace />;
   }
 
@@ -95,13 +92,6 @@ export default function BienDetail() {
               <Pencil size={17} />
               Modifier
             </button>
-            <button
-              type="button"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-stone-200 text-gray-500 transition hover:border-orange-200 hover:text-orange-500"
-              aria-label="Plus d'actions"
-            >
-              <MoreHorizontal size={20} />
-            </button>
           </div>
         </div>
 
@@ -128,7 +118,11 @@ export default function BienDetail() {
 
         {/* Zone de contenu coordonnée avec les tabs.
             Un seul composant est affiché à la fois pour éviter que les onglets soient seulement décoratifs. */}
-        <ActiveTabPanel activeTab={activeTab} selectedProperty={selectedProperty} />
+        <ActiveTabPanel
+          activeTab={activeTab}
+          selectedProperty={selectedProperty}
+          onMarkAsPaid={markAsPaid}
+        />
       </section>
 
       {/* Modal d'édition du bien et du locataire.
@@ -146,7 +140,7 @@ export default function BienDetail() {
 
 // Panneau actif de la fiche bien.
 // Il centralise la coordination entre les tabs et les blocs pour garder le JSX principal lisible.
-function ActiveTabPanel({ activeTab, selectedProperty }) {
+function ActiveTabPanel({ activeTab, selectedProperty, onMarkAsPaid }) {
   if (activeTab === "Locataire") {
     return (
       <div className="mt-5 max-w-2xl" role="tabpanel">
@@ -158,7 +152,7 @@ function ActiveTabPanel({ activeTab, selectedProperty }) {
   if (activeTab === "Paiements") {
     return (
       <div className="mt-5 max-w-2xl" role="tabpanel">
-        <PaymentCard selectedProperty={selectedProperty} />
+        <PaymentCard selectedProperty={selectedProperty} onMarkAsPaid={onMarkAsPaid} />
       </div>
     );
   }
@@ -247,7 +241,11 @@ function TenantCard({ selectedProperty }) {
 
 // Carte "Prochain paiement".
 // Elle met en avant le prochain loyer attendu et son statut.
-function PaymentCard({ selectedProperty }) {
+function PaymentCard({ selectedProperty, onMarkAsPaid }) {
+  // Le bouton devient inactif quand le paiement est déjà marqué payé.
+  // Cela évite de relancer une action qui ne changerait plus rien.
+  const isAlreadyPaid = selectedProperty.status === "Payé";
+
   return (
     <article className="rounded-xl border border-stone-200 p-4">
       {/* Titre de la carte paiement. */}
@@ -270,17 +268,19 @@ function PaymentCard({ selectedProperty }) {
       {/* Actions liées au paiement du bien sélectionné. */}
       <button
         type="button"
-        className="mt-5 inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-orange-500 text-sm font-bold text-white transition hover:bg-orange-600"
+        onClick={onMarkAsPaid}
+        disabled={isAlreadyPaid}
+        className="mt-5 inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-orange-500 text-sm font-bold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-green-500"
       >
         <Check size={16} />
-        Marquer comme payé
+        {isAlreadyPaid ? "Paiement marqué payé" : "Marquer comme payé"}
       </button>
-      <button
-        type="button"
-        className="mt-3 h-10 w-full rounded-lg border border-stone-200 text-sm font-bold text-gray-800 transition hover:border-orange-200 hover:text-orange-500"
+      <Link
+        to={`/biens/${selectedProperty.id}/paiements`}
+        className="mt-3 inline-flex h-10 w-full items-center justify-center rounded-lg border border-stone-200 text-sm font-bold text-gray-800 transition hover:border-orange-200 hover:text-orange-500"
       >
         Voir l'historique
-      </button>
+      </Link>
     </article>
   );
 }

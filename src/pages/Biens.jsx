@@ -10,17 +10,13 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { properties, statusStyles } from "../data/properties";
+import { statusStyles } from "../data/properties";
 
 // Nombre de biens affichés par page.
 // Si la liste devient plus grande que cette valeur, la pagination apparaît automatiquement.
 const ITEMS_PER_PAGE = 3;
 
-export default function Biens() {
-  // Liste des biens affichés dans la page.
-  // On part des données temporaires de properties.js, puis on peut retirer un bien de cette liste localement.
-  const [displayedProperties, setDisplayedProperties] = useState(properties);
-
+export default function Biens({ properties, onDeleteProperty }) {
   // Champ de recherche utilisé pour filtrer le tableau des biens.
   const [query, setQuery] = useState("");
 
@@ -33,11 +29,11 @@ export default function Biens() {
   const [currentPage, setCurrentPage] = useState(1);
 
   // Données des cartes de synthèse affichées en haut de la page.
-  // La valeur "Biens actifs" dépend de displayedProperties pour se mettre à jour après une suppression.
+  // Elles dépendent maintenant de properties, la liste partagée au niveau de App.jsx.
   const summaryCards = [
     {
       label: "Biens actifs",
-      value: String(displayedProperties.length),
+      value: String(properties.length),
       icon: Building2,
       tone: "bg-orange-100 text-orange-600",
     },
@@ -49,7 +45,7 @@ export default function Biens() {
     },
     {
       label: "Paiements à suivre",
-      value: "3",
+      value: String(properties.filter((property) => property.status !== "Payé").length),
       icon: CalendarCheck2,
       tone: "bg-sky-100 text-sky-600",
     },
@@ -60,15 +56,15 @@ export default function Biens() {
   const filteredProperties = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
-    if (!normalizedQuery) return displayedProperties;
+    if (!normalizedQuery) return properties;
 
-    return displayedProperties.filter((property) =>
+    return properties.filter((property) =>
       [property.name, property.address, property.tenant, property.status]
         .join(" ")
         .toLowerCase()
         .includes(normalizedQuery)
     );
-  }, [displayedProperties, query]);
+  }, [properties, query]);
 
   // Nombre total de pages après filtrage.
   // Math.max(1, ...) évite d'avoir une page 0 si la recherche ne retourne aucun résultat.
@@ -110,10 +106,8 @@ export default function Biens() {
   const confirmDelete = () => {
     if (!propertyToDelete) return;
 
-    // On met à jour la liste des biens affichés en retirant le bien sélectionné.
-    setDisplayedProperties((currentProperties) =>
-      currentProperties.filter((property) => property.id !== propertyToDelete.id)
-    );
+    // La suppression est déléguée à App.jsx pour que le dashboard et les détails restent synchronisés.
+    onDeleteProperty(propertyToDelete.id);
     setPropertyToDelete(null);
   };
 
