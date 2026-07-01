@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -54,6 +54,15 @@ export default function BienDetail({ properties, onUpdateProperty, onMarkPropert
   // Cette action met à jour le state partagé, donc le badge de cette fiche et le dashboard changent ensemble.
   const markAsPaid = () => {
     onMarkPropertyAsPaid(selectedProperty.id);
+  };
+
+  // Ajoute un document au bien courant.
+  // Comme pour la modification du bien, on reconstruit le bien complet puis on remonte la mise à jour à App.jsx.
+  const addDocumentToProperty = (document) => {
+    onUpdateProperty({
+      ...selectedProperty,
+      documents: [...selectedProperty.documents, document],
+    });
   };
 
   // Si l'id ne correspond à aucun bien, on revient vers la liste.
@@ -122,6 +131,7 @@ export default function BienDetail({ properties, onUpdateProperty, onMarkPropert
           activeTab={activeTab}
           selectedProperty={selectedProperty}
           onMarkAsPaid={markAsPaid}
+          onAddDocument={addDocumentToProperty}
         />
       </section>
 
@@ -140,7 +150,7 @@ export default function BienDetail({ properties, onUpdateProperty, onMarkPropert
 
 // Panneau actif de la fiche bien.
 // Il centralise la coordination entre les tabs et les blocs pour garder le JSX principal lisible.
-function ActiveTabPanel({ activeTab, selectedProperty, onMarkAsPaid }) {
+function ActiveTabPanel({ activeTab, selectedProperty, onMarkAsPaid, onAddDocument }) {
   if (activeTab === "Locataire") {
     return (
       <div className="mt-5 max-w-2xl" role="tabpanel">
@@ -160,7 +170,7 @@ function ActiveTabPanel({ activeTab, selectedProperty, onMarkAsPaid }) {
   if (activeTab === "Documents") {
     return (
       <div className="mt-5" role="tabpanel">
-        <DocumentsPanel selectedProperty={selectedProperty} />
+        <DocumentsPanel selectedProperty={selectedProperty} onAddDocument={onAddDocument} />
       </div>
     );
   }
@@ -287,7 +297,45 @@ function PaymentCard({ selectedProperty, onMarkAsPaid }) {
 
 // Bloc "Documents".
 // Il liste les fichiers rattachés au bien et propose une zone pour en ajouter un nouveau.
-function DocumentsPanel({ selectedProperty }) {
+function DocumentsPanel({ selectedProperty, onAddDocument }) {
+  // Référence vers l'input fichier caché.
+  // Elle permet au bouton stylé "Ajouter un document" d'ouvrir le sélecteur natif du navigateur.
+  const fileInputRef = useRef(null);
+
+  // Ouvre la fenêtre de sélection de fichier.
+  // Le vrai input reste invisible pour conserver le design existant.
+  const openFilePicker = () => {
+    fileInputRef.current?.click();
+  };
+
+  // Formate la date du jour au format français, par exemple 01/07/2026.
+  // Cette date est affichée sur la carte du document ajouté.
+  const getTodayLabel = () =>
+    new Intl.DateTimeFormat("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    }).format(new Date());
+
+  // Réagit au choix d'un fichier.
+  // Pour l'instant, on garde les métadonnées du fichier en mémoire car il n'y a pas encore de backend de stockage.
+  const uploadDocument = (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    onAddDocument({
+      id: `${file.name}-${file.lastModified}`,
+      title: file.name,
+      date: getTodayLabel(),
+      size: file.size,
+      type: file.type || "Fichier",
+    });
+
+    // Réinitialise l'input pour autoriser l'ajout du même fichier une deuxième fois si besoin.
+    event.target.value = "";
+  };
+
   return (
     <section className="rounded-xl border border-stone-200 p-4">
       <h3 className="text-sm font-extrabold text-gray-950">Documents</h3>
@@ -295,7 +343,7 @@ function DocumentsPanel({ selectedProperty }) {
         {/* Cartes des documents existants. */}
         {selectedProperty.documents.map((document) => (
           <article
-            key={document.title}
+            key={document.id ?? document.title}
             className="rounded-lg border border-stone-200 p-4 transition hover:border-orange-200 hover:bg-orange-50/40"
           >
             <FileText className="text-orange-500" size={22} />
@@ -304,9 +352,21 @@ function DocumentsPanel({ selectedProperty }) {
           </article>
         ))}
 
-        {/* Bouton d'ajout d'un document, prêt à être branché à un upload plus tard. */}
+        {/* Input fichier invisible.
+            Il accepte les formats courants de documents et d'images, puis délègue l'ajout à uploadDocument. */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+          onChange={uploadDocument}
+        />
+
+        {/* Bouton d'ajout d'un document.
+            Le clic ouvre le sélecteur de fichier, puis le document choisi est ajouté à la liste du bien. */}
         <button
           type="button"
+          onClick={openFilePicker}
           className="flex min-h-[112px] flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-stone-300 text-sm font-bold text-gray-500 transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-500"
         >
           <FilePlus2 size={24} />
